@@ -171,6 +171,14 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
             neutron_api_config['openstack-origin-git'] = \
                 yaml.dump(openstack_origin_git)
 
+        neutron_api_config['enable-sriov'] = True
+        neutron_api_config['supported-pci-vendor-devs'] = '8086:1515'
+
+        if self._get_openstack_release() >= self.trusty_mitaka:
+            neutron_api_config['enable-ml2-dns'] = True
+            # openstack.example. is the default but be explicit for the test
+            neutron_api_config['dns-domain'] = 'openstack.example.'
+
         keystone_config = {'admin-password': 'openstack',
                            'admin-token': 'ubuntutesting'}
         nova_cc_config = {'network-manager': 'Neutron'}
@@ -211,11 +219,17 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
            service units."""
         u.log.debug('Checking status of system services...')
         neutron_api_services = ['neutron-server']
+        nova_cc_services = ['nova-api-os-compute',
+                            'nova-cert',
+                            'nova-scheduler',
+                            'nova-conductor']
+
         if self._get_openstack_release() >= self.xenial_newton:
             neutron_services = ['neutron-dhcp-agent',
                                 'neutron-lbaasv2-agent',
                                 'neutron-metadata-agent',
                                 'neutron-openvswitch-agent']
+            nova_cc_services.remove('nova-cert')
         elif self._get_openstack_release() >= self.trusty_mitaka and \
                 self._get_openstack_release() < self.xenial_newton:
             neutron_services = ['neutron-dhcp-agent',
@@ -234,20 +248,10 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
         if self._get_openstack_release() < self.trusty_kilo:
             neutron_services.append('neutron-metering-agent')
 
-        nova_cc_services = ['nova-api-os-compute',
-                            'nova-cert',
-                            'nova-scheduler',
-                            'nova-conductor']
-
         services = {
-            self.keystone_sentry: ['keystone'],
-            self.nova_cc_sentry: nova_cc_services,
             self.neutron_gw_sentry: neutron_services,
             self.neutron_api_sentry: neutron_api_services,
         }
-
-        if self._get_openstack_release() >= self.trusty_liberty:
-            services[self.keystone_sentry] = ['apache2']
 
         ret = u.validate_services_by_name(services)
         if ret:
@@ -394,6 +398,12 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
             'service_tenant': 'services',
             'service_username': 'neutron',
         }
+
+        if self._get_openstack_release() >= self.trusty_mitaka:
+            expected.update({
+                'dns-domain': 'openstack.example.',
+            })
+
         ret = u.validate_relation_data(unit, relation, expected)
         if ret:
             message = u.relation_error(
@@ -410,6 +420,7 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
         expected = {
             'private-address': u.valid_ip,
         }
+
         ret = u.validate_relation_data(unit, relation, expected)
         if ret:
             message = u.relation_error('neutron-api neutron-plugin-api', ret)
@@ -481,6 +492,11 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
                 'connection': db_conn,
             },
         }
+
+        if self._get_openstack_release() >= self.trusty_mitaka:
+            expected['DEFAULT'].update({
+                'dns_domain': 'openstack.example.'
+            })
 
         auth_uri = '{}://{}:{}'.format(
             rel_napi_ks['service_protocol'],
@@ -607,18 +623,35 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
             },
             'securitygroup': {
                 'enable_security_group': 'False',
-            }
+            },
         }
 
-        if self._get_openstack_release() == self.trusty_liberty:
-            # Liberty
-            expected['ml2'].update({
-                'mechanism_drivers': 'openvswitch,l2population'
-            })
-        else:
-            # Earlier or later than Liberty
+        if self._get_openstack_release() < self.trusty_kilo:
+            # Pre-Kilo
             expected['ml2'].update({
                 'mechanism_drivers': 'openvswitch,hyperv,l2population'
+            })
+        elif self._get_openstack_release() == self.trusty_liberty:
+            # Liberty
+            expected['ml2'].update({
+                'mechanism_drivers': 'openvswitch,l2population,sriovnicswitch'
+            })
+        else:
+            # Juno, Kilo, Mitaka and newer
+            expected['ml2'].update({
+                'mechanism_drivers': 'openvswitch,hyperv,l2population'
+                                     ',sriovnicswitch'
+            })
+
+        if ('kilo' <= self._get_openstack_release() <= 'mitaka'):
+            # Kilo through Mitaka require supported_pci_vendor_devs set
+            expected['ml2_sriov'].update({
+                'supported_pci_vendor_devs': '8086:1515',
+            })
+
+        if self._get_openstack_release() >= self.trusty_mitaka:
+            expected['ml2'].update({
+                'extension_drivers': 'dns',
             })
 
         for section, pairs in expected.iteritems():

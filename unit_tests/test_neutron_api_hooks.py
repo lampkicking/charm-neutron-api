@@ -79,7 +79,6 @@ TO_PATCH = [
     'relation_ids',
     'relation_set',
     'related_units',
-    'service_restart',
     'unit_get',
     'get_iface_for_address',
     'get_netmask_for_address',
@@ -604,6 +603,9 @@ class NeutronAPIHooksTests(CharmTestCase):
             'enable-dvr': False,
             'enable-l3ha': False,
             'addr': '172.18.18.18',
+            'polling-interval': 2,
+            'rpc-response-timeout': 60,
+            'report-interval': 30,
             'l2-population': False,
             'overlay-network-type': 'vxlan',
             'service_protocol': None,
@@ -638,6 +640,9 @@ class NeutronAPIHooksTests(CharmTestCase):
             'enable-dvr': True,
             'enable-l3ha': False,
             'addr': '172.18.18.18',
+            'polling-interval': 2,
+            'rpc-response-timeout': 60,
+            'report-interval': 30,
             'l2-population': True,
             'overlay-network-type': 'vxlan',
             'service_protocol': None,
@@ -672,6 +677,9 @@ class NeutronAPIHooksTests(CharmTestCase):
             'enable-dvr': False,
             'enable-l3ha': True,
             'addr': '172.18.18.18',
+            'polling-interval': 2,
+            'rpc-response-timeout': 60,
+            'report-interval': 30,
             'l2-population': False,
             'overlay-network-type': 'vxlan',
             'service_protocol': None,
@@ -705,6 +713,9 @@ class NeutronAPIHooksTests(CharmTestCase):
         _relation_data = {
             'neutron-security-groups': False,
             'addr': '172.18.18.18',
+            'polling-interval': 2,
+            'rpc-response-timeout': 60,
+            'report-interval': 30,
             'l2-population': False,
             'overlay-network-type': 'vxlan',
             'network-device-mtu': 1500,
@@ -742,6 +753,9 @@ class NeutronAPIHooksTests(CharmTestCase):
             'enable-dvr': False,
             'enable-l3ha': False,
             'addr': '172.18.18.18',
+            'polling-interval': 2,
+            'rpc-response-timeout': 60,
+            'report-interval': 30,
             'l2-population': False,
             'overlay-network-type': 'vxlan',
             'service_protocol': None,
@@ -768,9 +782,11 @@ class NeutronAPIHooksTests(CharmTestCase):
             **_relation_data
         )
 
-    def test_cluster_changed(self):
+    @patch.object(hooks, 'check_local_db_actions_complete')
+    def test_cluster_changed(self, mock_check_local_db_actions_complete):
         self._call_hook('cluster-relation-changed')
         self.assertTrue(self.CONFIGS.write_all.called)
+        self.assertTrue(mock_check_local_db_actions_complete.called)
 
     @patch.object(hooks, 'get_hacluster_config')
     def test_ha_joined(self, _get_ha_config):
@@ -962,7 +978,6 @@ class NeutronAPIHooksTests(CharmTestCase):
         self.os_release.return_value = 'kilo'
         hooks.conditional_neutron_migration()
         self.migrate_neutron_database.assert_called_with()
-        self.service_restart.assert_called_with('neutron-server')
 
     def test_conditional_neutron_migration_leader_icehouse(self):
         self.test_relation.set({
@@ -979,7 +994,6 @@ class NeutronAPIHooksTests(CharmTestCase):
         self.os_release.return_value = 'icehouse'
         hooks.conditional_neutron_migration()
         self.assertFalse(self.migrate_neutron_database.called)
-        self.assertFalse(self.service_restart.called)
 
     def test_etcd_peer_joined(self):
         self._call_hook('etcd-proxy-relation-joined')

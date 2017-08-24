@@ -48,6 +48,13 @@ TENANT_NET_TYPES = [VXLAN, GRE, VLAN, FLAT, LOCAL]
 EXTENSION_DRIVER_PORT_SECURITY = 'port_security'
 EXTENSION_DRIVER_DNS = 'dns'
 
+ETC_NEUTRON = '/etc/neutron'
+
+NOTIFICATION_TOPICS = [
+    'notifications',
+    'notifications_designate'
+]
+
 # Domain name validation regex which is used to certify that
 # the domain-name consists only of valid characters, is not
 # longer than 63 characters in length for any name segment,
@@ -171,6 +178,27 @@ def get_dns_domain():
     dns_domain += '.'
 
     return dns_domain
+
+
+def get_ml2_mechanism_drivers():
+    """Build comma delimited list of mechanism drivers for use in Neutron
+       ml2_conf.ini. Which drivers to enable are deduced from OpenStack
+       release and charm configuration options.
+    """
+    mechanism_drivers = [
+        'openvswitch',
+    ]
+
+    cmp_release = CompareOpenStackReleases(os_release('neutron-server'))
+    if (cmp_release == 'kilo' or cmp_release >= 'mitaka'):
+        mechanism_drivers.append('hyperv')
+
+    if get_l2population():
+        mechanism_drivers.append('l2population')
+
+    if (config('enable-sriov') and cmp_release >= 'kilo'):
+        mechanism_drivers.append('sriovnicswitch')
+    return ','.join(mechanism_drivers)
 
 
 class ApacheSSLContext(context.ApacheSSLContext):
@@ -368,11 +396,6 @@ class NeutronCCContext(context.NeutronContext):
 
         ctxt['enable_sriov'] = config('enable-sriov')
 
-        if cmp_release == 'kilo' or cmp_release >= 'mitaka':
-            ctxt['enable_hyperv'] = True
-        else:
-            ctxt['enable_hyperv'] = False
-
         if cmp_release >= 'mitaka':
             if config('global-physnet-mtu'):
                 ctxt['global_physnet_mtu'] = config('global-physnet-mtu')
@@ -380,6 +403,14 @@ class NeutronCCContext(context.NeutronContext):
                     ctxt['path_mtu'] = config('path-mtu')
                 else:
                     ctxt['path_mtu'] = config('global-physnet-mtu')
+
+        if 'kilo' <= cmp_release <= 'mitaka':
+            pci_vendor_devs = config('supported-pci-vendor-devs')
+            if pci_vendor_devs:
+                ctxt['supported_pci_vendor_devs'] = \
+                    ','.join(pci_vendor_devs.split())
+
+        ctxt['mechanism_drivers'] = get_ml2_mechanism_drivers()
 
         return ctxt
 
@@ -602,3 +633,15 @@ class MidonetContext(context.OSContextGenerator):
                 if self.context_complete(ctxt):
                     return ctxt
         return {}
+
+
+class NeutronAMQPContext(context.AMQPContext):
+    '''AMQP context with Neutron API sauce'''
+
+    def __init__(self):
+        super(NeutronAMQPContext, self).__init__(ssl_dir=ETC_NEUTRON)
+
+    def __call__(self):
+        context = super(NeutronAMQPContext, self).__call__()
+        context['notification_topics'] = ','.join(NOTIFICATION_TOPICS)
+        return context
