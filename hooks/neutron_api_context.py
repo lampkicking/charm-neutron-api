@@ -612,6 +612,10 @@ class NeutronCCContext(context.NeutronContext):
 
             ctxt['service_plugins'] = ','.join(ctxt['service_plugins'])
 
+        physical_network_mtus = config('physical-network-mtus')
+        if physical_network_mtus:
+            ctxt['physical_network_mtus'] = ','.join(physical_network_mtus.split())
+
         return ctxt
 
 
