@@ -27,6 +27,7 @@ from charmhelpers.core.hookenv import (
     is_relation_made,
     local_unit,
     log,
+    DEBUG,
     ERROR,
     WARNING,
     relation_get,
@@ -94,11 +95,13 @@ from neutron_api_context import (
     get_l2population,
     get_overlay_network_type,
     IdentityServiceContext,
+    is_qos_requested_and_valid,
     EtcdContext,
 )
 
 from charmhelpers.contrib.hahelpers.cluster import (
     get_hacluster_config,
+    is_clustered,
     is_elected_leader,
 )
 
@@ -395,6 +398,10 @@ def relation_broken():
 
 @hooks.hook('identity-service-relation-joined')
 def identity_joined(rid=None, relation_trigger=False):
+    if config('vip') and not is_clustered():
+        log('Defering registration until clustered', level=DEBUG)
+        return
+
     public_url = '{}:{}'.format(canonical_url(CONFIGS, PUBLIC),
                                 api_port('neutron-server'))
     admin_url = '{}:{}'.format(canonical_url(CONFIGS, ADMIN),
@@ -484,6 +491,7 @@ def neutron_plugin_api_relation_joined(rid=None):
             'l2-population': get_l2population(),
             'enable-dvr': get_dvr(),
             'enable-l3ha': get_l3ha(),
+            'enable-qos': is_qos_requested_and_valid(),
             'overlay-network-type': get_overlay_network_type(),
             'addr': unit_get('private-address'),
             'polling-interval': config('polling-interval'),
