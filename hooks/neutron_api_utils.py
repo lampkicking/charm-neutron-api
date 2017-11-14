@@ -47,6 +47,7 @@ from charmhelpers.contrib.openstack.utils import (
     token_cache_pkgs,
     enable_memcache,
     CompareOpenStackReleases,
+    reset_os_release,
 )
 
 from charmhelpers.contrib.python.packages import (
@@ -560,6 +561,7 @@ def do_openstack_upgrade(configs):
     ]
     apt_update(fatal=True)
     apt_upgrade(options=dpkg_opts, fatal=True, dist=True)
+    reset_os_release()
     pkgs = determine_packages(new_src)
     # Sort packages just to make unit tests easier
     pkgs.sort()
