@@ -22,6 +22,10 @@ series:
   - xenial
   - bionic
   - cosmic
+<<<<<<< HEAD
+=======
+  - disco
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
   - trusty
 provides:
   nrpe-external-master:

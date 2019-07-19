@@ -1,6 +1,10 @@
 [gerrit]
-host=review.openstack.org
+host=review.opendev.org
 port=29418
 project=openstack/charm-neutron-api.git
 
+<<<<<<< HEAD
 defaultbranch=stable/18.11
+=======
+defaultbranch=stable/19.04
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968

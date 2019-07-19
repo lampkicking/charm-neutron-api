@@ -416,6 +416,8 @@ class NeutronCCContextTest(CharmTestCase):
             'debug': True,
             'enable_dvr': False,
             'l3_ha': False,
+            'allow_automatic_dhcp_failover': True,
+            'allow_automatic_l3agent_failover': False,
             'mechanism_drivers': 'openvswitch,l2population',
             'dhcp_agents_per_network': 3,
             'enable_sriov': False,
@@ -462,6 +464,11 @@ class NeutronCCContextTest(CharmTestCase):
             'debug': True,
             'enable_dvr': False,
             'l3_ha': False,
+<<<<<<< HEAD
+=======
+            'allow_automatic_dhcp_failover': True,
+            'allow_automatic_l3agent_failover': False,
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
             'mechanism_drivers': 'openvswitch,hyperv,l2population',
             'dhcp_agents_per_network': 3,
             'enable_sriov': False,
@@ -488,6 +495,13 @@ class NeutronCCContextTest(CharmTestCase):
             'vni_ranges': '1001:2000',
             'extension_drivers': 'port_security',
             'service_plugins': 'router,firewall,lbaas,vpnaas,metering',
+<<<<<<< HEAD
+=======
+            'network_scheduler_driver': (
+                'neutron.scheduler.dhcp_agent_scheduler'
+                '.AZAwareWeightScheduler'),
+            'dhcp_load_type': 'networks',
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
         }
         napi_ctxt = context.NeutronCCContext()
         self.maxDiff = None
@@ -509,6 +523,16 @@ class NeutronCCContextTest(CharmTestCase):
             self.assertEqual('example.org.', ctxt['dns_domain'])
             self.assertEqual('port_security,dns', ctxt['extension_drivers'])
 
+<<<<<<< HEAD
+=======
+        self.os_release.return_value = 'queens'
+        with patch.object(napi_ctxt, '_ensure_packages'):
+            ctxt = napi_ctxt()
+            self.assertEqual('example.org.', ctxt['dns_domain'])
+            self.assertEqual('port_security,dns_domain_ports',
+                             ctxt['extension_drivers'])
+
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
     @patch.object(context, 'NeutronLoadBalancerContext')
     @patch.object(context.NeutronCCContext, 'network_manager')
     @patch.object(context.NeutronCCContext, 'plugin')
@@ -555,6 +579,8 @@ class NeutronCCContextTest(CharmTestCase):
             'debug': True,
             'enable_dvr': False,
             'l3_ha': False,
+            'allow_automatic_dhcp_failover': True,
+            'allow_automatic_l3agent_failover': False,
             'mechanism_drivers': 'openvswitch,l2population',
             'dhcp_agents_per_network': 3,
             'enable_sriov': False,
@@ -618,6 +644,8 @@ class NeutronCCContextTest(CharmTestCase):
             'tenant_network_types': 'gre,vlan,flat,local',
             'max_l3_agents_per_router': 2,
             'min_l3_agents_per_router': 2,
+            'allow_automatic_dhcp_failover': True,
+            'allow_automatic_l3agent_failover': False,
             'dhcp_agents_per_network': 3,
             'enable_sriov': False,
             'quota_floatingip': 50,
@@ -672,6 +700,8 @@ class NeutronCCContextTest(CharmTestCase):
             'debug': True,
             'enable_dvr': False,
             'l3_ha': False,
+            'allow_automatic_dhcp_failover': True,
+            'allow_automatic_l3agent_failover': False,
             'mechanism_drivers': 'openvswitch,hyperv,l2population'
                                  ',sriovnicswitch',
             'dhcp_agents_per_network': 3,
@@ -836,6 +866,7 @@ class NeutronCCContextTest(CharmTestCase):
                          expected_service_plugins)
 
     @patch.object(context, 'NeutronLoadBalancerContext')
+<<<<<<< HEAD
     @patch.object(context.NeutronCCContext, 'network_manager')
     @patch.object(context.NeutronCCContext, 'plugin')
     @patch('builtins.__import__')
@@ -854,6 +885,26 @@ class NeutronCCContextTest(CharmTestCase):
     @patch.object(context.NeutronCCContext, 'network_manager')
     @patch.object(context.NeutronCCContext, 'plugin')
     @patch('builtins.__import__')
+=======
+    @patch.object(context.NeutronCCContext, 'network_manager')
+    @patch.object(context.NeutronCCContext, 'plugin')
+    @patch('builtins.__import__')
+    def test_neutroncc_context_vlan_trunking_invalid_release(self, _import,
+                                                             plugin, nm, nlb):
+        plugin.return_value = None
+        self.os_release.return_value = 'mitaka'
+        self.test_config.set('neutron-plugin', 'ovs')
+        self.test_config.set('enable-vlan-trunking', True)
+        napi_ctxt = context.NeutronCCContext()()
+        expected_service_plugins = ('router,firewall,lbaas,vpnaas,metering')
+        self.assertEqual(napi_ctxt['service_plugins'],
+                         expected_service_plugins)
+
+    @patch.object(context, 'NeutronLoadBalancerContext')
+    @patch.object(context.NeutronCCContext, 'network_manager')
+    @patch.object(context.NeutronCCContext, 'plugin')
+    @patch('builtins.__import__')
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
     def test_neutroncc_context_service_plugins(self, _import, plugin, nm, nlb):
         plugin.return_value = None
         self.test_config.set('enable-qos', False)
@@ -917,6 +968,7 @@ class NeutronCCContextTest(CharmTestCase):
             'router,firewall,metering,segments,'
             'neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2,'
             'neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin')
+<<<<<<< HEAD
         self.assertEqual(context.NeutronCCContext()()['service_plugins'],
                          service_plugins)
         # queens
@@ -935,6 +987,39 @@ class NeutronCCContextTest(CharmTestCase):
             'neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2')
         self.assertEqual(context.NeutronCCContext()()['service_plugins'],
                          service_plugins)
+=======
+        self.assertEqual(context.NeutronCCContext()()['service_plugins'],
+                         service_plugins)
+        # queens
+        self.os_release.return_value = 'pike'
+        service_plugins = (
+            'router,firewall,metering,segments,'
+            'neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2,'
+            'neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin')
+        self.assertEqual(context.NeutronCCContext()()['service_plugins'],
+                         service_plugins)
+        # rocky
+        self.os_release.return_value = 'rocky'
+        service_plugins = (
+            'router,firewall,metering,segments,'
+            'neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin,'
+            'lbaasv2')
+        ncc_context = context.NeutronCCContext()()
+        self.assertEqual(ncc_context['service_plugins'],
+                         service_plugins)
+
+        # stein
+        self.os_release.return_value = 'stein'
+        service_plugins = (
+            'router,firewall_v2,metering,segments,'
+            'neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin,'
+            'lbaasv2')
+        ncc_context = context.NeutronCCContext()()
+        self.assertEqual(ncc_context['service_plugins'],
+                         service_plugins)
+        self.assertTrue(ncc_context['firewall_v2'])
+
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
         # rocky and related to charm through neutron-load-balancer interface
         self.os_release.return_value = 'rocky'
         service_plugins = (
