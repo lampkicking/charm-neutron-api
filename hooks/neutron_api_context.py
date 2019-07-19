@@ -49,6 +49,7 @@ TENANT_NET_TYPES = [VXLAN, GRE, VLAN, FLAT, LOCAL]
 
 EXTENSION_DRIVER_PORT_SECURITY = 'port_security'
 EXTENSION_DRIVER_DNS = 'dns'
+EXTENSION_DRIVER_DNS_DOMAIN_PORTS = 'dns_domain_ports'
 EXTENSION_DRIVER_QOS = 'qos'
 
 ETC_NEUTRON = '/etc/neutron'
@@ -396,6 +397,11 @@ class NeutronCCContext(context.NeutronContext):
             ctxt['max_l3_agents_per_router'] = max_agents
             ctxt['min_l3_agents_per_router'] = min_agents
 
+        ctxt['allow_automatic_l3agent_failover'] = \
+            config('allow-automatic-l3agent-failover')
+        ctxt['allow_automatic_dhcp_failover'] = \
+            config('allow-automatic-dhcp-failover')
+
         ctxt['dhcp_agents_per_network'] = config('dhcp-agents-per-network')
         ctxt['tenant_network_types'] = self.neutron_tenant_network_types
         ctxt['overlay_network_type'] = self.neutron_overlay_network_type
@@ -468,11 +474,29 @@ class NeutronCCContext(context.NeutronContext):
                 if related_units(rid):
                     enable_dns_extension_driver = True
 
+<<<<<<< HEAD
+=======
+            # AZAwareWeightScheduler inherits from WeightScheduler and is
+            # available as of mitaka
+            ctxt['network_scheduler_driver'] = (
+                'neutron.scheduler.dhcp_agent_scheduler.AZAwareWeightScheduler'
+            )
+            ctxt['dhcp_load_type'] = config('dhcp-load-type')
+
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
         extension_drivers = []
         if config('enable-ml2-port-security'):
             extension_drivers.append(EXTENSION_DRIVER_PORT_SECURITY)
         if enable_dns_extension_driver:
+<<<<<<< HEAD
             extension_drivers.append(EXTENSION_DRIVER_DNS)
+=======
+            if cmp_release < 'queens':
+                extension_drivers.append(EXTENSION_DRIVER_DNS)
+            else:
+                extension_drivers.append(EXTENSION_DRIVER_DNS_DOMAIN_PORTS)
+
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
         if is_qos_requested_and_valid():
             extension_drivers.append(EXTENSION_DRIVER_QOS)
 
@@ -550,10 +574,17 @@ class NeutronCCContext(context.NeutronContext):
                 'rocky': ['router', 'firewall', 'metering', 'segments',
                           ('neutron_dynamic_routing.'
                            'services.bgp.bgp_plugin.BgpPlugin')],
+<<<<<<< HEAD
+=======
+                'stein': ['router', 'firewall_v2', 'metering', 'segments',
+                          ('neutron_dynamic_routing.'
+                           'services.bgp.bgp_plugin.BgpPlugin')],
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
             }
             if cmp_release >= 'rocky':
                 if ctxt.get('load_balancer_name', None):
                     # TODO(fnordahl): Remove when ``neutron_lbaas`` is retired
+<<<<<<< HEAD
                     service_plugins['rocky'].append('lbaasv2-proxy')
                 else:
                     # TODO(fnordahl): Remove fall-back in next charm release
@@ -563,6 +594,18 @@ class NeutronCCContext(context.NeutronContext):
 
             ctxt['service_plugins'] = service_plugins.get(
                 release, service_plugins['rocky'])
+=======
+                    service_plugins[release].append('lbaasv2-proxy')
+                else:
+                    # TODO(fnordahl): Remove fall-back in next charm release
+                    service_plugins[release].append('lbaasv2')
+
+            if cmp_release >= 'stein':
+                ctxt['firewall_v2'] = True
+
+            ctxt['service_plugins'] = service_plugins.get(
+                release, service_plugins['stein'])
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
 
             if is_nsg_logging_enabled():
                 ctxt['service_plugins'].append('log')
@@ -834,6 +877,10 @@ class NeutronAMQPContext(context.AMQPContext):
 
     def __call__(self):
         context = super(NeutronAMQPContext, self).__call__()
+        # TODO (dparv) The class to be removed in next charm release
+        # and from BASE_RESOURCE_MAP neutron_api_utils.py as well
+        if not context:
+            return
         context['notification_topics'] = ','.join(NOTIFICATION_TOPICS)
         return context
 

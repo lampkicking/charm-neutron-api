@@ -14,26 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-<<<<<<< HEAD
 <<<<<<< HEAD:tests/dev-basic-cosmic-rocky
 """Amulet tests on a basic neutron-api deployment on cosmic-rocky."""
 =======
 """Amulet tests on a basic neutron-api deployment on disco-stein."""
 >>>>>>> f02d3cc793c588536a165f601ff72c67879fc968:tests/dev-basic-disco-stein
-=======
-"""Amulet tests on a basic neutron-api deployment on cosmic-rocky."""
->>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
 
 from basic_deployment import NeutronAPIBasicDeployment
 
 if __name__ == '__main__':
-<<<<<<< HEAD
 <<<<<<< HEAD:tests/dev-basic-cosmic-rocky
     deployment = NeutronAPIBasicDeployment(series='cosmic')
 =======
     deployment = NeutronAPIBasicDeployment(series='disco')
 >>>>>>> f02d3cc793c588536a165f601ff72c67879fc968:tests/dev-basic-disco-stein
-=======
-    deployment = NeutronAPIBasicDeployment(series='cosmic')
->>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
     deployment.run_tests()

@@ -52,7 +52,7 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
         services = ("neutron-server", "apache2", "haproxy")
         u.get_unit_process_ids(
             {self.neutron_api_sentry: services},
-            expect_success=should_run)
+            expect_success=should_run, pgrep_full=self.pgrep_full)
 
     def _add_services(self):
         """Add services
@@ -154,6 +154,13 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
         self.neutron_api_sentry = self.d.sentry['neutron-api'][0]
         self.neutron_ovs_sentry = self.d.sentry['neutron-openvswitch'][0]
         self.nova_compute_sentry = self.d.sentry['nova-compute'][0]
+
+        # pidof is failing to find neutron-server on stein
+        # use pgrep instead.
+        if self._get_openstack_release() >= self.bionic_stein:
+            self.pgrep_full = True
+        else:
+            self.pgrep_full = False
 
         u.log.debug('openstack release val: {}'.format(
             self._get_openstack_release()))
@@ -408,6 +415,7 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
             message = u.relation_error('nova-cc neutron-api', ret)
             amulet.raise_status(amulet.FAIL, msg=message)
 
+<<<<<<< HEAD
     def test_300_neutron_config(self):
         """Verify the data in the neutron config file."""
         u.log.debug('Checking neutron.conf config file data...')
@@ -528,6 +536,8 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
                 message = "neutron config error: {}".format(ret)
                 amulet.raise_status(amulet.FAIL, msg=message)
 
+=======
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
     def test_301_ml2_config(self):
         """Verify the data in the ml2 config file. This is only available
            since icehouse."""
@@ -583,7 +593,11 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
                 'supported_pci_vendor_devs': '8086:1515',
             })
 
-        if self._get_openstack_release() >= self.trusty_mitaka:
+        if self._get_openstack_release() >= self.xenial_queens:
+            expected['ml2'].update({
+                'extension_drivers': 'dns_domain_ports',
+            })
+        elif self._get_openstack_release() >= self.trusty_mitaka:
             expected['ml2'].update({
                 'extension_drivers': 'dns',
             })
@@ -661,6 +675,20 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
             self.d.configure('neutron-api', set_default)
             u.log.debug('OK')
 
+<<<<<<< HEAD
+=======
+    def test_501_security_checklist_action(self):
+        """Verify expected result on a default install"""
+        u.log.debug("Testing security-checklist")
+        sentry_unit = self.neutron_api_sentry
+
+        action_id = u.run_action(sentry_unit, "security-checklist")
+        u.wait_on_action(action_id)
+        data = amulet.actions.get_action_output(action_id, full_output=True)
+        assert data.get(u"status") == "failed", \
+            "Security check is expected to not pass by default"
+
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
     def test_900_restart_on_config_change(self):
         """Verify that the specified services are restarted when the
         config is changed."""
@@ -684,11 +712,13 @@ class NeutronAPIBasicDeployment(OpenStackAmuletDeployment):
 
         for s, conf_file in services.iteritems():
             u.log.debug("Checking that service restarted: {}".format(s))
-            if not u.validate_service_config_changed(sentry, mtime, s,
-                                                     conf_file,
-                                                     retry_count=4,
-                                                     retry_sleep_time=20,
-                                                     sleep_time=20):
+            if not u.validate_service_config_changed(
+                    sentry, mtime, s,
+                    conf_file,
+                    retry_count=4,
+                    retry_sleep_time=20,
+                    sleep_time=20,
+                    pgrep_full=self.pgrep_full):
                 self.d.configure(juju_service, set_default)
                 msg = "service {} didn't restart after config change".format(s)
                 amulet.raise_status(amulet.FAIL, msg=msg)

@@ -14,8 +14,11 @@
 
 import sys
 
+<<<<<<< HEAD
 import json
 
+=======
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
 from mock import MagicMock, patch, call
 from test_utils import CharmTestCase
 
@@ -80,8 +83,6 @@ TO_PATCH = [
     'relation_set',
     'related_units',
     'unit_get',
-    'get_iface_for_address',
-    'get_netmask_for_address',
     'update_nrpe_config',
     'service_reload',
     'neutron_plugin_attribute',
@@ -89,11 +90,19 @@ TO_PATCH = [
     'force_etcd_restart',
     'status_set',
     'get_relation_ip',
+<<<<<<< HEAD
     'update_dns_ha_resource_params',
+=======
+    'generate_ha_relation_data',
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
     'is_nsg_logging_enabled',
     'remove_old_packages',
     'services',
     'service_restart',
+<<<<<<< HEAD
+=======
+    'generate_ha_relation_data',
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
 ]
 NEUTRON_CONF_DIR = "/etc/neutron"
 
@@ -506,6 +515,8 @@ class NeutronAPIHooksTests(CharmTestCase):
             'enable-l3ha': False,
             'enable-qos': False,
             'enable-vlan-trunking': False,
+<<<<<<< HEAD
+=======
             'addr': '172.18.18.18',
             'polling-interval': 2,
             'rpc-response-timeout': 60,
@@ -533,6 +544,59 @@ class NeutronAPIHooksTests(CharmTestCase):
         self.get_overlay_network_type.return_value = 'vxlan'
         self.get_dns_domain.return_value = ''
         self._call_hook('neutron-plugin-api-relation-joined')
+        self.relation_set.assert_called_with(
+            relation_id=None,
+            **_relation_data
+        )
+
+    def test_neutron_plugin_api_relation_joined_nsg_logging(self):
+        self.unit_get.return_value = '172.18.18.18'
+        self.IdentityServiceContext.return_value = \
+            DummyContext(return_value={})
+        _relation_data = {
+            'neutron-security-groups': False,
+            'enable-dvr': False,
+            'enable-l3ha': False,
+            'enable-qos': False,
+            'enable-vlan-trunking': False,
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
+            'addr': '172.18.18.18',
+            'polling-interval': 2,
+            'rpc-response-timeout': 60,
+            'report-interval': 30,
+            'l2-population': False,
+            'overlay-network-type': 'vxlan',
+            'service_protocol': None,
+            'auth_protocol': None,
+            'service_tenant': None,
+            'service_port': None,
+            'region': 'RegionOne',
+            'service_password': None,
+            'auth_port': None,
+            'auth_host': None,
+            'service_username': None,
+            'service_host': None,
+            'neutron-api-ready': 'no',
+<<<<<<< HEAD
+            'enable-nsg-logging': False,
+=======
+            'enable-nsg-logging': True,
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
+        }
+
+        self.is_qos_requested_and_valid.return_value = False
+        self.is_vlan_trunking_requested_and_valid.return_value = False
+        self.get_dvr.return_value = False
+        self.get_l3ha.return_value = False
+        self.get_l2population.return_value = False
+        self.get_overlay_network_type.return_value = 'vxlan'
+        self.get_dns_domain.return_value = ''
+
+        self.test_config.set('enable-security-group-logging', True)
+        self.is_nsg_logging_enabled.return_value = True
+
+        self._call_hook('neutron-plugin-api-relation-joined')
+
         self.relation_set.assert_called_with(
             relation_id=None,
             **_relation_data
@@ -763,6 +827,7 @@ class NeutronAPIHooksTests(CharmTestCase):
         self.assertTrue(self.CONFIGS.write_all.called)
         self.assertTrue(mock_check_local_db_actions_complete.called)
 
+<<<<<<< HEAD
     @patch.object(hooks, 'get_hacluster_config')
     def test_ha_joined(self, _get_ha_config):
         _ha_config = {
@@ -936,6 +1001,13 @@ class NeutronAPIHooksTests(CharmTestCase):
                  init_services=None, relation_id=None,
                  resource_params=None, resources=None),
         ])
+=======
+    def test_ha_relation_joined(self):
+        self.generate_ha_relation_data.return_value = {'rel_data': 'data'}
+        self._call_hook('ha-relation-joined')
+        self.relation_set.assert_called_once_with(
+            relation_id=None, rel_data='data')
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
 
     def test_ha_changed(self):
         self.test_relation.set({

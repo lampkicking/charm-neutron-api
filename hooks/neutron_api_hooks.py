@@ -29,7 +29,6 @@ from charmhelpers.core.hookenv import (
     log,
     DEBUG,
     ERROR,
-    WARNING,
     relation_get,
     relation_ids,
     relation_set,
@@ -103,13 +102,12 @@ from neutron_api_context import (
 )
 
 from charmhelpers.contrib.hahelpers.cluster import (
-    get_hacluster_config,
     is_clustered,
     is_elected_leader,
 )
 
 from charmhelpers.contrib.openstack.ha.utils import (
-    update_dns_ha_resource_params,
+    generate_ha_relation_data,
 )
 
 from charmhelpers.payload.execd import execd_preinstall
@@ -124,9 +122,6 @@ from charmhelpers.contrib.openstack.neutron import (
 )
 
 from charmhelpers.contrib.network.ip import (
-    get_iface_for_address,
-    get_netmask_for_address,
-    is_ipv6,
     get_relation_ip,
 )
 
@@ -565,6 +560,7 @@ def cluster_changed():
 
 @hooks.hook('ha-relation-joined')
 def ha_joined(relation_id=None):
+<<<<<<< HEAD
     cluster_config = get_hacluster_config()
     resources = {
         'res_neutron_haproxy': 'lsb:haproxy',
@@ -642,6 +638,15 @@ def ha_joined(relation_id=None):
                  groups=None, init_services=None,
                  resources=None, resource_params=None,
                  clones=None)
+=======
+    extra_settings = {
+        'delete_resources': ['cl_nova_haproxy']
+    }
+    settings = generate_ha_relation_data(
+        'neutron',
+        extra_settings=extra_settings)
+    relation_set(relation_id=relation_id, **settings)
+>>>>>>> f02d3cc793c588536a165f601ff72c67879fc968
 
 
 @hooks.hook('ha-relation-changed')
