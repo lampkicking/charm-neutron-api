@@ -597,8 +597,6 @@ class NeutronCCContext(context.NeutronContext):
                          ('neutron_dynamic_routing.'
                           'services.bgp.bgp_plugin.BgpPlugin')],
                 'queens': ['router', 'firewall_v2', 'metering', 'segments',
-                           ('neutron_lbaas.services.loadbalancer.plugin.'
-                            'LoadBalancerPluginv2'),
                            ('neutron_dynamic_routing.'
                             'services.bgp.bgp_plugin.BgpPlugin')],
                 'rocky': ['router', 'firewall_v2', 'metering', 'segments',
