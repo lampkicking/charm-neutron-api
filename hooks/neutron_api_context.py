@@ -611,7 +611,7 @@ class NeutronCCContext(context.NeutronContext):
                 # TODO: FWaaS was deprecated at Ussuri and will be removed
                 # during the W cycle
             }
-            if cmp_release >= 'rocky' and cmp_release < 'train':
+            if cmp_release >= 'pike' and cmp_release < 'queens':
                 if ctxt.get('load_balancer_name', None):
                     # TODO(fnordahl): Remove when ``neutron_lbaas`` is retired
                     service_plugins[release].append('lbaasv2-proxy')
@@ -621,7 +621,7 @@ class NeutronCCContext(context.NeutronContext):
 
             # TODO: FWaaS was deprecated at Ussuri and will be removed
             # during the W cycle
-            if cmp_release >= 'stein':
+            if cmp_release >= 'queens':
                 ctxt['firewall_v2'] = True
 
             ctxt['service_plugins'] = service_plugins.get(
